@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./assets/dist/css/index.css" />
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    
+
     <title>Dashboard Boilerplate</title>
 </head>
 
@@ -16,10 +16,9 @@
     <div class="row">
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
             <div class="position-sticky pt-3 sidebar-sticky">
-                <div class="logo-wrap bg-dark text-center">
-                    <div class="logo-wrap text-white text-center">
-                        <h2> Dashboard</h2>
-                    </div>                </div>
+                <div class="logo-wrap text-white text-center">
+                    <h2> Dashboard</h2>
+                </div>
                 <ul class="nav flex-column mt-4">
 
                     <li class="nav-item">
@@ -77,57 +76,466 @@
             <!-- ./row -->
         </nav>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <h1 class="h2 my-5">Immatriculation</h1>
+            <h1 class="h2 my-5">Dashboard</h1>
+            <!-- <div class="row row-stats mb-4 mb-2-sm">
+                <div class="col-md-3">
+                    <div href="#" class="h-primary-outline mb-2-sm">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
 
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+                    <div href="#" class="h-primary-outline mb-2-sm">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-3">
+                    <div href="#" class="h-primary-outline mb-2-sm">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <a href="#" class="h-primary-outline">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>   -->
             <!-- ./row -->
             <div class="row">
-                <div class="col-md-7">
+                <div class="col-md">
                     <div class="card shadow-sm mb-2-sm">
                         <div class="card-body p-4 text-center">
-                            <h2>Price Histogram</h2>
-                            <div id="prix-histogram"></div>
+
+                            <i class="fas fa-user"></i> <span id="clientImmat-count">Loading...</span>
+                            <script>
+                                d3.csv("/immatClients.csv").then(function(data) {
+                                    // Assuming each row in CSV is a client
+                                    const numberOfClients = data.length;
+                                    console.log(numberOfClients)
+                                    // Update the content of the span with the id 'client-count'
+                                    document.getElementById('clientImmat-count').textContent = `Nombre des Lignes dans la table de fusion : ${numberOfClients}`;
+                                });
+                            </script>
 
                         </div>
                         <!-- ./card-body -->
                     </div>
                     <!-- ./card -->
                 </div>
-                <!-- ./col -->
-                <div class="col-md-5">
-                    <div class="card shadow-sm">
+
+            </div>
+            <div class="row">
+                <div class="col-md">
+                    <h3>Répartition de l'âge par marque de voiture</h3>
+                    <div class="card shadow-sm mb-2-sm">
+                        <div class="card-body p-4 text-center">
+                            <svg id="ageBrandBoxPlot"></svg>
+                            <script>
+                                const tooltip = d3.select("body").append("div")
+                                    .attr("class", "tooltip")
+                                    .style("opacity", 0)
+                                    .style("position", "absolute")
+                                    .style("text-align", "center")
+                                    .style("background-color", "white")
+                                    .style("border", "solid")
+                                    .style("border-width", "1px")
+                                    .style("border-radius", "5px")
+                                    .style("padding", "10px");
+                                // Charger les données
+                                d3.csv("/immatClients.csv").then(function(data) {
+                                    // Transformation des données
+                                    let ageBrandData = d3.group(data, d => d.marque); // Grouper par marque
+                                    ageBrandData = Array.from(ageBrandData, ([key, value]) => ({ key, value }));
+
+                                    // Configuration du SVG
+                                    const svg = d3.select("#ageBrandBoxPlot"),
+                                        margin = {top: 10, right: 30, bottom: 30, left: 40},
+                                        width = 1200 - margin.left - margin.right,
+                                        height = 500 - margin.top - margin.bottom;
+
+                                    const g = svg.attr("width", width + margin.left + margin.right)
+                                        .attr("height", height + margin.top + margin.bottom)
+                                        .append("g")
+                                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                                    // Créer l'échelle X
+                                    const x = d3.scaleBand()
+                                        .range([0, width])
+                                        .domain(ageBrandData.map(d => d.key))
+                                        .paddingInner(1)
+                                        .paddingOuter(.5);
+
+                                    g.append("g")
+                                        .attr("transform", `translate(0,${height})`)
+                                        .call(d3.axisBottom(x));
+
+                                    // Créer l'échelle Y
+                                    const y = d3.scaleLinear()
+                                        .domain([0, d3.max(data, d => +d.age)])
+                                        .range([height, 0]);
+                                    g.append("g").call(d3.axisLeft(y));
+
+                                    // Fonction pour calculer la médiane
+                                    const median = arr => {
+                                        const mid = Math.floor(arr.length / 2),
+                                            nums = [...arr].sort((a, b) => a - b);
+                                        return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+                                    };
+                                    g.selectAll("individualPoints")
+                                        .data(data)
+                                        .enter()
+                                        .append("circle")
+                                        .attr("cx", d => x(d.marque) + x.bandwidth() / 2)
+                                        .attr("cy", d => y(+d.age))
+                                        .attr("r", 3)
+                                        .style("fill", "grey")
+                                        .attr("stroke", "black")
+                                        .on("mouseover", function(event, d) {
+                                            tooltip.transition()
+                                                .duration(200)
+                                                .style("opacity", .9);
+                                            tooltip.html(`Age: ${d.age}<br/>Marque: ${d.marque}`)
+                                                .style("left", (event.pageX) + "px")
+                                                .style("top", (event.pageY - 28) + "px");
+                                        })
+                                        .on("mouseout", function(d) {
+                                            tooltip.transition()
+                                                .duration(500)
+                                                .style("opacity", 0);
+                                        });
+
+                                    // Ajouter des lignes médianes
+                                    g.selectAll("medianLines")
+                                        .data(ageBrandData)
+                                        .enter()
+                                        .append("line")
+                                        .attr("x1", d => x(d.key))
+                                        .attr("x2", d => x(d.key) + x.bandwidth())
+                                        .attr("y1", d => y(median(d.value.map(g => +g.age))))
+                                        .attr("y2", d => y(median(d.value.map(g => +g.age))))
+                                        .attr("stroke", "black")
+                                        .style("width", 80);
+
+                                    // Ajouter des points individuels (pour chaque âge)
+                                    g.selectAll("individualPoints")
+                                        .data(data)
+                                        .enter()
+                                        .append("circle")
+                                        .attr("cx", d => x(d.marque) + x.bandwidth() / 2)
+                                        .attr("cy", d => y(+d.age))
+                                        .attr("r", 3)
+                                        .style("fill", "grey")
+                                        .attr("stroke", "black");
+
+                                    // Ajouter les boxplots
+                                    g.selectAll("boxes")
+                                        .data(ageBrandData)
+                                        .enter()
+                                        .append("rect")
+                                        .attr("x", d => x(d.key))
+                                        .attr("y", d => y(d3.quantile(d.value.map(g => +g.age).sort(d3.ascending), .75)))
+                                        .attr("height", d => y(d3.quantile(d.value.map(g => +g.age).sort(d3.ascending), .25)) - y(d3.quantile(d.value.map(g => +g.age).sort(d3.ascending), .75)))
+                                        .attr("width", x.bandwidth())
+                                        .attr("stroke", "black")
+                                        .style("fill", "#69b3a2");
+                                });
+                                // Création de l'info-bulle
+
+
+                            </script>
+                        </div>
+                        <!-- ./card-body -->
+                    </div>
+                    <!-- ./card -->
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md">
+                    <h3>Distribution des prix des voitures par sexe</h3>
+                    <div class="card shadow-sm mb-2-sm">
+                        <div class="card-body p-4 text-center">
+                            <svg id="priceGenderBoxPlot"></svg>
+                            <script>
+                                a1()
+                                function a1(){
+
+                                    // Charger les données
+                                    d3.csv("/immatClients.csv").then(function(data) {
+                                        // Transformation des données
+                                        let priceGenderData = d3.group(data, d => d.sexe); // Grouper par sexe
+                                        priceGenderData = Array.from(priceGenderData, ([key, value]) => ({ key, value }));
+
+                                        // Configuration du SVG
+                                        const svg = d3.select("#priceGenderBoxPlot"),
+                                            margin = {top: 10, right: 30, bottom: 30, left: 40},
+                                            width = 600 - margin.left - margin.right,
+                                            height = 400 - margin.top - margin.bottom;
+
+                                        const g = svg.attr("width", width + margin.left + margin.right)
+                                            .attr("height", height + margin.top + margin.bottom)
+                                            .append("g")
+                                            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                                        // Créer l'échelle X
+                                        const x = d3.scaleBand()
+                                            .range([0, width])
+                                            .domain(priceGenderData.map(d => d.key))
+                                            .padding(0.2);
+
+                                        g.append("g")
+                                            .attr("transform", `translate(0,${height})`)
+                                            .call(d3.axisBottom(x));
+
+                                        // Créer l'échelle Y
+                                        const y = d3.scaleLinear()
+                                            .domain([0, d3.max(data, d => +d.prix)])
+                                            .range([height, 0]);
+                                        g.append("g").call(d3.axisLeft(y));
+
+                                        // Ajouter les boxplots
+                                        g.selectAll("boxes")
+                                            .data(priceGenderData)
+                                            .enter()
+                                            .append("rect")
+                                            .attr("x", d => x(d.key))
+                                            .attr("y", d => y(d3.quantile(d.value.map(g => +g.prix).sort(d3.ascending), .75)))
+                                            .attr("height", d => y(d3.quantile(d.value.map(g => +g.prix).sort(d3.ascending), .25)) - y(d3.quantile(d.value.map(g => +g.prix).sort(d3.ascending), .75)))
+                                            .attr("width", x.bandwidth())
+                                            .attr("stroke", "black")
+                                            .style("fill", "#69b3a2");
+                                    });
+
+                                }
+
+                            </script>
+                        </div>
+                        <!-- ./card-body -->
+                    </div>
+                    <!-- ./card -->
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md">
+                    <h3>Situation familiale et puissance de la voiture</h3>
+                    <div class="card shadow-sm mb-2-sm">
+                        <div class="card-body p-4 text-center">
+                            <svg id="familyPowerCarPlot"></svg>
+                            <script>
+                                d3.csv("/immatClients.csv").then(function(data) {
+                                    // Configuration du SVG
+                                    const svg = d3.select("#familyPowerCarPlot"),
+                                        margin = {top: 20, right: 20, bottom: 70, left: 40},
+                                        width = 960 - margin.left - margin.right,
+                                        height = 500 - margin.top - margin.bottom;
+
+                                    const g = svg.attr("width", width + margin.left + margin.right)
+                                        .attr("height", height + margin.top + margin.bottom)
+                                        .append("g")
+                                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                                    // Préparation des données
+                                    const familyTypeData = d3.group(data, d => d.situationFamiliale);
+                                    const processedData = Array.from(familyTypeData, ([key, value]) => ({ key, value: d3.mean(value, v => v.puissance) }));
+
+                                    // Créer l'échelle X
+                                    const x = d3.scaleBand()
+                                        .range([0, width])
+                                        .domain(processedData.map(d => d.key))
+                                        .padding(0.2);
+
+                                    g.append("g")
+                                        .attr("transform", `translate(0,${height})`)
+                                        .call(d3.axisBottom(x))
+                                        .selectAll("text")
+                                        .style("text-anchor", "end")
+                                        .attr("dx", "-.8em")
+                                        .attr("dy", ".15em")
+                                        .attr("transform", "rotate(-65)");
+
+                                    // Créer l'échelle Y
+                                    const y = d3.scaleLinear()
+                                        .domain([0, d3.max(processedData, d => d.value)])
+                                        .range([height, 0]);
+
+                                    g.append("g")
+                                        .call(d3.axisLeft(y));
+
+                                    // Ajouter les barres
+                                    g.selectAll(".bar")
+                                        .data(processedData)
+                                        .enter().append("rect")
+                                        .attr("class", "bar")
+                                        .attr("x", d => x(d.key))
+                                        .attr("width", x.bandwidth())
+                                        .attr("y", d => y(d.value))
+                                        .attr("height", d => height - y(d.value))
+                                        .attr("fill", "#69b3a2");
+                                });
+                            </script>
+                        </div>
+                        <!-- ./card-body -->
+                    </div>
+                    <!-- ./card -->
+                </div>
+            </div>
+
+
+
+
+            <div class="row">
+                <div class="col-md">
+                    <h3>Couleur de la voiture par sexe</h3>
+                    <div class="card shadow-sm mb-2-sm">
                         <div class="card-body">
-                            <h2>Car Colour</h2>
-
-                            <div id="tooltip2" style="opacity: 0; position: absolute; background: rgba(255, 255, 255, 0.8); padding: 10px; border: 1px solid #d3d3d3; border-radius: 4px;"></div>
-
-                            <div id="car-colour-pie"></div>
-
+                            <!-- Div pour afficher le graphique -->
+                            <div id="car-colors-chart"></div>
                         </div>
-                        <!-- ./card-body -->
                     </div>
-                    <!-- ./card -->
                 </div>
-                <!-- ./col -->
             </div>
+
+            <!-- Inclure D3.js -->
+            <script src="https://d3js.org/d3.v7.min.js"></script>
+
+            <script>
+                // Sélectionnez le conteneur du graphique
+                const chartContainer = d3.select('#car-colors-chart');
+
+                // Chargez les données à partir du fichier CSV
+                d3.csv("/immatClients.csv").then(function(data) {
+                    // Préparez un objet pour stocker les comptages de couleurs de voiture par sexe
+                    const colorCounts = {
+                        Male: {},
+                        Female: {}
+                    };
+
+                    // Remplissez l'objet colorCounts avec les données du CSV
+                    data.forEach((row) => {
+                        if (row.sexe === 'M') {
+                            colorCounts.Male[row.couleur] = (colorCounts.Male[row.couleur] || 0) + 1;
+                        } else if (row.sexe === 'F') {
+                            colorCounts.Female[row.couleur] = (colorCounts.Female[row.couleur] || 0) + 1;
+                        }
+                    });
+
+                    // Transformez les données en un tableau pour la création du pie chart
+                    const maleData = Object.entries(colorCounts.Male).map(([color, count]) => ({ color, count }));
+                    const femaleData = Object.entries(colorCounts.Female).map(([color, count]) => ({ color, count }));
+
+                    // Créez une fonction pour générer les couleurs du pie chart
+                    const color = d3.scaleOrdinal()
+                        .domain(maleData.map(d => d.color))
+                        .range(d3.schemeSet2);
+
+                    // Créez une fonction pour générer le pie chart pour les hommes
+                    const malePie = d3.pie().value(d => d.count);
+                    const maleArcs = malePie(maleData);
+
+                    // Créez une fonction pour générer le pie chart pour les femmes
+                    const femalePie = d3.pie().value(d => d.count);
+                    const femaleArcs = femalePie(femaleData);
+
+                    // Créez un groupe SVG pour le pie chart
+                    const svg = chartContainer.append("svg")
+                        .attr("width", chartContainer.node().clientWidth)
+                        .attr("height", chartContainer.node().clientHeight);
+
+                    // Créez un groupe pour le pie chart des hommes
+                    const malePieGroup = svg.append("g")
+                        .attr("transform", `translate(${chartContainer.node().clientWidth / 3}, ${chartContainer.node().clientHeight / 2})`);
+
+                    // Créez un groupe pour le pie chart des femmes
+                    const femalePieGroup = svg.append("g")
+                        .attr("transform", `translate(${2 * chartContainer.node().clientWidth / 3}, ${chartContainer.node().clientHeight / 2})`);
+
+                    // Créez une fonction pour afficher les infos au survol
+                    const tooltip = d3.select("#car-colors-chart").append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
+
+                    // Créez les arcs pour le pie chart des hommes
+                    const maleArcsGroup = malePieGroup.selectAll(".arc")
+                        .data(maleArcs)
+                        .enter()
+                        .append("g")
+                        .attr("class", "arc")
+                        .on("mouseover", (event, d) => {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", 0.9);
+                            tooltip.html(`sexe : homme , couleur de la voiture :  ${d.data.color}: , nombre des voitures : ${d.data.count}`)
+                                .style("left", (event.pageX) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+
+                    maleArcsGroup.append("path")
+                        .attr("d", d3.arc()
+                            .innerRadius(0)
+                            .outerRadius(Math.min(chartContainer.node().clientWidth, chartContainer.node().clientHeight) / 2))
+                        .attr("fill", d => color(d.data.color));
+
+
+
+                    // Créez les arcs pour le pie chart des femmes
+                    const femaleArcsGroup = femalePieGroup.selectAll(".arc")
+                        .data(femaleArcs)
+                        .enter()
+                        .append("g")
+                        .attr("class", "arc")
+                        .on("mouseover", (event, d) => {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", 0.9);
+                            tooltip.html(`sexe : femme , couleur de la voiture :  ${d.data.color}: , nombre des voitures : ${d.data.count}`)
+                                .style("left", (event.pageX) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+
+                    femaleArcsGroup.append("path")
+                        .attr("d", d3.arc()
+                            .innerRadius(0)
+                            .outerRadius(Math.min(chartContainer.node().clientWidth, chartContainer.node().clientHeight) / 2))
+                        .attr("fill", d => color(d.data.color));
+
+
+                });
+            </script>
+
+
+
+
+
             <!-- ./row -->
-            <!-- ./row -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card shadow-sm mb-2-sm">
-                        <div class="card-body p-4 text-center">
-
-                            <h2>Car Marque Distribution</h2>
-                            <div id="marque-bar-chart" ></div>
-
-                        </div>
-                        <!-- ./card-body -->
-                    </div>
-                    <!-- ./card -->
-                </div>
-
-            </div>
-            <!-- ./row -->
-
         </main>
     </div>
     <!-- ./row -->
