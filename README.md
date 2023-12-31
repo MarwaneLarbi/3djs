@@ -2,6 +2,7 @@
 
 Ce projet se concentre sur la visualisation de données en utilisant D3.js. Il implique l'analyse et la fusion de données issues de tables d'immatriculation et de clients, permettant ainsi de créer une série de 11 diagrammes interactifs et informatifs.
 
+#### le video de la démonstration https://youtu.be/v9uxGicwtbA
 ## Prérequis
 
 Pour exécuter ce projet, assurez-vous d'avoir installé le serveur HTTP npm. Si ce n'est pas le cas, vous pouvez l'installer en utilisant la commande suivante : 
